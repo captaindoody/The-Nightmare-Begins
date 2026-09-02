@@ -1,0 +1,51 @@
+#root {
+    min-height: 100vh;
+}
+
+.page {
+    max-width: 520px;
+    margin: 20px auto;
+    padding: 10px;
+}
+
+.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.auth-box {
+    width: 300px;
+    margin: 40px auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #ccc;
+    
+}
+
+.page .auth-box {
+    width: auto;
+    margin: 0 0 20px;
+}
+
+.auth-box input,
+.auth-box select,
+.auth-box button,
+.top button {
+    padding: 10px;
+}
+
+.auth-box button,
+.top button {
+    cursor: pointer;
+}
+
+.task {
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+
+
+}

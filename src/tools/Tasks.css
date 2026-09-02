@@ -1,0 +1,19 @@
+.task-form {
+    width: 400px;
+}
+
+.task-input,
+.task-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+.task-textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.task-form button {
+    width: 100%;
+}
