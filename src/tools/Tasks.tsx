@@ -6,6 +6,7 @@ type Task = {
     user_id: number;
     assignee_id: number | null;
     assignee_username: string | null;
+    assignee_avatar_url: string | null;
     title: string;
     description: string | null;
     completed: boolean;
@@ -284,9 +285,29 @@ function Tasks({ onLogout }: TasksProps) {
 
                             <p className="task-status">
                                 Срок: {task.due_date || "Не указан"}
-                                <br />
-                                Исполнитель: {task.assignee_username || "Не назначен"}
                             </p>
+
+                            <div className="task-assignee">
+                                <span>Исполнитель:</span>
+                                {task.assignee_username ? (
+                                    <span className="assignee-user">
+                                        {task.assignee_avatar_url ? (
+                                            <img
+                                                className="assignee-avatar"
+                                                src={task.assignee_avatar_url}
+                                                alt=""
+                                            />
+                                        ) : (
+                                            <span className="assignee-avatar assignee-avatar-placeholder">
+                                                {task.assignee_username.slice(0, 1).toUpperCase()}
+                                            </span>
+                                        )}
+                                        {task.assignee_username}
+                                    </span>
+                                ) : (
+                                    <span>Не назначен</span>
+                                )}
+                            </div>
 
                             <div className="task-actions">
                                 <button

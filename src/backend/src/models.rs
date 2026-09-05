@@ -64,6 +64,7 @@ pub struct Task {
     pub user_id: i32,
     pub assignee_id: Option<i32>,
     pub assignee_username: Option<String>,
+    pub assignee_avatar_url: Option<String>,
     pub title: String,
     pub description: Option<String>,
     pub completed: bool,

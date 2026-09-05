@@ -27,6 +27,7 @@ use crate::{
 const TASK_SELECT: &str =
     "SELECT tasks.id, tasks.user_id, tasks.assignee_id,
             assignee.username AS assignee_username,
+            assignee.avatar_url AS assignee_avatar_url,
             tasks.title, tasks.description, tasks.completed,
             tasks.due_date, tasks.created_at
      FROM tasks
@@ -133,6 +134,7 @@ async fn create_task(
          (user_id, assignee_id, title, description, due_date)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id, user_id, assignee_id, NULL::TEXT AS assignee_username,
+                   NULL::TEXT AS assignee_avatar_url,
                    title, description, completed, due_date, created_at"
     )
     .bind(user_id)
@@ -177,6 +179,7 @@ async fn update_task(
          WHERE id = $2
                      AND (user_id = $3 OR assignee_id = $3)
                  RETURNING id, user_id, assignee_id, NULL::TEXT AS assignee_username,
+                           NULL::TEXT AS assignee_avatar_url,
                                      title, description, completed, due_date, created_at"
     )
     .bind(data.completed)
