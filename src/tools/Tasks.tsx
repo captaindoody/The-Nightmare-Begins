@@ -4,9 +4,18 @@ import "./Tasks.css";
 type Task = {
     id: number;
     user_id: number;
+    assignee_id: number | null;
+    assignee_username: string | null;
     title: string;
     description: string | null;
     completed: boolean;
+    due_date: string | null;
+};
+
+type User = {
+    id: number;
+    username: string;
+    role: string;
 };
 
 type TasksProps = {
@@ -16,7 +25,10 @@ type TasksProps = {
 function Tasks({ onLogout }: TasksProps) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [dueDate, setDueDate] = useState("");
+    const [assigneeId, setAssigneeId] = useState("");
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
 
     async function loadTasks() {
         const token = localStorage.getItem("token");
@@ -48,7 +60,24 @@ function Tasks({ onLogout }: TasksProps) {
 
     useEffect(() => {
         loadTasks();
+        loadUsers();
     }, []);
+
+    async function loadUsers() {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            return;
+        }
+
+        const response = await fetch("http://127.0.0.1:3000/users", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            setUsers(await response.json());
+        }
+    }
 
     async function handleSubmit(
         event: FormEvent<HTMLFormElement>
@@ -75,7 +104,9 @@ function Tasks({ onLogout }: TasksProps) {
                 },
                 body: JSON.stringify({
                     title,
-                    description
+                    description,
+                    due_date: dueDate || null,
+                    assignee_id: assigneeId ? Number(assigneeId) : null
                 })
             }
         );
@@ -88,6 +119,8 @@ function Tasks({ onLogout }: TasksProps) {
 
         setTitle("");
         setDescription("");
+        setDueDate("");
+        setAssigneeId("");
 
         loadTasks();
     }
@@ -187,6 +220,28 @@ function Tasks({ onLogout }: TasksProps) {
                         }
                     />
 
+                    <div className="task-form-row">
+                        <input
+                            className="task-input"
+                            type="date"
+                            value={dueDate}
+                            onChange={(event) => setDueDate(event.target.value)}
+                        />
+
+                        <select
+                            className="task-input"
+                            value={assigneeId}
+                            onChange={(event) => setAssigneeId(event.target.value)}
+                        >
+                            <option value="">Без исполнителя</option>
+                            {users.map((user) => (
+                                <option key={user.id} value={user.id}>
+                                    {user.username} ({user.role})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     <button
                         className="create-button"
                         type="submit"
@@ -225,6 +280,12 @@ function Tasks({ onLogout }: TasksProps) {
                                 {task.completed
                                     ? "Выполнено"
                                     : "Активна"}
+                            </p>
+
+                            <p className="task-status">
+                                Срок: {task.due_date || "Не указан"}
+                                <br />
+                                Исполнитель: {task.assignee_username || "Не назначен"}
                             </p>
 
                             <div className="task-actions">

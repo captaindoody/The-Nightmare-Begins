@@ -1,67 +1,80 @@
 import { useState, type FormEvent } from "react";
+import "./Auth.css";
 
 type LoginProps = {
-    onLogin: () => void;
+    onLogin: (username: string) => void;
 };
 
 function Login({ onLogin }: LoginProps) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
-    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    async function handleSubmit(
+        event: FormEvent<HTMLFormElement>
+    ) {
         event.preventDefault();
 
-        const user = {
-            username,
-            password
-        };
-
-        try {
-            const response = await fetch("http://127.0.0.1:3000/login", {
+        const response = await fetch(
+            "http://127.0.0.1:3000/login",
+            {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(user)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                console.log("Ошибка:", data);
-                return;
+                body: JSON.stringify({
+                    username,
+                    password
+                })
             }
+        );
 
-            localStorage.setItem("token", data.token);
+        const data = await response.json();
 
-            onLogin();
-
-        } catch (error) {
-            console.error("Ошибка соединения:", error);
+        if (!response.ok) {
+            console.log("Ошибка:", data);
+            return;
         }
+
+        localStorage.setItem("token", data.token);
+
+        onLogin(data.username);
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h2>Login</h2>
+        <form className="auth-card" onSubmit={handleSubmit}>
+            <div className="auth-eyebrow">TASK MANAGER</div>
+            <h1 className="auth-title">С возвращением</h1>
+            <p className="auth-subtitle">Войдите, чтобы продолжить работу с задачами.</p>
 
-            <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-            />
+            <div className="auth-field">
+                <label htmlFor="login-username">Имя пользователя</label>
 
-            <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-            />
+                <input
+                    id="login-username"
+                    type="text"
+                    value={username}
+                    onChange={(event) =>
+                        setUsername(event.target.value)
+                    }
+                    autoComplete="username"
+                />
+            </div>
 
-            <button type="submit">
-                Login
-            </button>
+            <div className="auth-field">
+                <label htmlFor="login-password">Пароль</label>
+
+                <input
+                    id="login-password"
+                    type="password"
+                    value={password}
+                    onChange={(event) =>
+                        setPassword(event.target.value)
+                    }
+                    autoComplete="current-password"
+                />
+            </div>
+
+            <button className="auth-submit" type="submit">Войти в аккаунт</button>
         </form>
     );
 }

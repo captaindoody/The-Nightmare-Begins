@@ -1,51 +1,70 @@
-#root {
-    min-height: 100vh;
-}
-
-.page {
-    max-width: 520px;
-    margin: 20px auto;
-    padding: 10px;
-}
-
-.top {
+.app-layout {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+    min-height: 100vh;
+    background: #15191f;
+    color: #d6d9dd;
+    font-family: Arial, sans-serif;
 }
 
-.auth-box {
-    width: 300px;
-    margin: 40px auto;
-    padding: 20px;
+.sidebar {
+    width: 210px;
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding: 20px 12px;
+    background: #1b2027;
+    border-right: 1px solid #303740;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    border: 1px solid #ccc;
-    
 }
 
-.page .auth-box {
-    width: auto;
-    margin: 0 0 20px;
+.sidebar-title {
+    margin: 5px 8px 25px;
+    color: #eeeeee;
+    font-size: 19px;
+    font-weight: normal;
 }
 
-.auth-box input,
-.auth-box select,
-.auth-box button,
-.top button {
-    padding: 10px;
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.auth-box button,
-.top button {
+.sidebar-button,
+.sidebar-logout {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    background: transparent;
+    color: #aeb5bd;
+    text-align: left;
+    font-size: 14px;
     cursor: pointer;
 }
 
-.task {
-    border-top: 1px solid #ccc;
-    padding-top: 10px;
+.sidebar-button:hover {
+    background: #242a32;
+    color: #dce0e4;
+}
 
+.sidebar-button.active {
+    background: #252c35;
+    border-color: #353e48;
+    color: #eeeeee;
+}
 
+.sidebar-logout {
+    margin-top: auto;
+    color: #999fa7;
+}
+
+.sidebar-logout:hover {
+    background: #242a32;
+    color: #d4d7da;
+}
+
+.main-content {
+    flex: 1;
+    padding: 35px 40px;
 }

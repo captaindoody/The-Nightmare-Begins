@@ -1,7 +1,7 @@
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    routing::{delete, get, patch, post},
+    routing::{get, patch},
     Json,
     Router,
 };
@@ -23,6 +23,14 @@ use crate::{
     },
     AppState,
 };
+
+const TASK_SELECT: &str =
+    "SELECT tasks.id, tasks.user_id, tasks.assignee_id,
+            assignee.username AS assignee_username,
+            tasks.title, tasks.description, tasks.completed,
+            tasks.due_date, tasks.created_at
+     FROM tasks
+     LEFT JOIN users AS assignee ON assignee.id = tasks.assignee_id";
 
 #[derive(Deserialize)]
 struct Claims {
@@ -85,12 +93,10 @@ async fn get_tasks(
         &state.jwt_secret,
     )?;
 
-    let tasks = query_as::<_, Task>(
-        "SELECT id, user_id, title, description, completed
-         FROM tasks
-         WHERE user_id = $1
-         ORDER BY id"
-    )
+    let tasks = query_as::<_, Task>(&format!(
+        "{} WHERE tasks.user_id = $1 OR tasks.assignee_id = $1 ORDER BY tasks.id",
+        TASK_SELECT
+    ))
     .bind(user_id)
     .fetch_all(&state.pool)
     .await
@@ -124,13 +130,16 @@ async fn create_task(
 
     let task = query_as::<_, Task>(
         "INSERT INTO tasks
-         (user_id, title, description)
-         VALUES ($1, $2, $3)
-         RETURNING id, user_id, title, description, completed"
+         (user_id, assignee_id, title, description, due_date)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, user_id, assignee_id, NULL::TEXT AS assignee_username,
+                   title, description, completed, due_date, created_at"
     )
     .bind(user_id)
+    .bind(data.assignee_id)
     .bind(data.title)
     .bind(data.description)
+    .bind(data.due_date)
     .fetch_one(&state.pool)
     .await
     .map_err(|error| {
@@ -163,11 +172,12 @@ async fn update_task(
     )?;
 
     let task = query_as::<_, Task>(
-        "UPDATE tasks
+                "UPDATE tasks
          SET completed = $1
          WHERE id = $2
-           AND user_id = $3
-         RETURNING id, user_id, title, description, completed"
+                     AND (user_id = $3 OR assignee_id = $3)
+                 RETURNING id, user_id, assignee_id, NULL::TEXT AS assignee_username,
+                                     title, description, completed, due_date, created_at"
     )
     .bind(data.completed)
     .bind(id)
@@ -210,8 +220,8 @@ async fn delete_task(
 
     let result = sqlx::query(
         "DELETE FROM tasks
-         WHERE id = $1
-           AND user_id = $2"
+                 WHERE id = $1
+                     AND user_id = $2"
     )
     .bind(id)
     .bind(user_id)

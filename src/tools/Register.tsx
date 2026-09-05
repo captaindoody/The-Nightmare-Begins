@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./Auth.css";
 
 function Register() {
     const [username, setUsername] = useState("");
@@ -27,24 +28,34 @@ function Register() {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            Username
+        <form className="auth-card" onSubmit={handleSubmit}>
+            <div className="auth-eyebrow">TASK MANAGER</div>
+            <h1 className="auth-title">Создайте аккаунт</h1>
+            <p className="auth-subtitle">Организуйте работу и держите задачи под контролем.</p>
 
-            <input
-                type="text"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-            />
+            <div className="auth-field">
+                <label htmlFor="register-username">Имя пользователя</label>
+                <input
+                    id="register-username"
+                    type="text"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    autoComplete="username"
+                />
+            </div>
 
-            Password
+            <div className="auth-field">
+                <label htmlFor="register-password">Пароль</label>
+                <input
+                    id="register-password"
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    autoComplete="new-password"
+                />
+            </div>
 
-            <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-            />
-
-            <button type="submit">Register</button>
+            <button className="auth-submit" type="submit">Зарегистрироваться</button>
         </form>
     );
 }
