@@ -39,6 +39,17 @@
     font-size: 14px;
 }
 
+.auth-error {
+    padding: 9px 10px;
+    margin: 0 0 18px;
+    border: 1px solid #70434a;
+    border-radius: 3px;
+    background: #2b2024;
+    color: #d9aeb4;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
 .auth-field {
     display: grid;
     gap: 8px;

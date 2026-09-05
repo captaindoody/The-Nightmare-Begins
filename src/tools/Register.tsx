@@ -4,12 +4,17 @@ import "./Auth.css";
 function Register() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        console.log(username);
-        console.log(password);
+        setError("");
+
+        if (!username.trim() || !password) {
+            setError("Введите имя пользователя и пароль.");
+            return;
+        }
 
         const user = {
         username,
@@ -24,7 +29,14 @@ function Register() {
     body: JSON.stringify(user)
     });
 
-    console.log(response);
+        if (!response.ok) {
+            const message = await response.text();
+            setError(message || "Не удалось зарегистрироваться.");
+            return;
+        }
+
+        setUsername("");
+        setPassword("");
     }
 
     return (
@@ -32,6 +44,8 @@ function Register() {
             <div className="auth-eyebrow">TASK MANAGER</div>
             <h1 className="auth-title">Создайте аккаунт</h1>
             <p className="auth-subtitle">Организуйте работу и держите задачи под контролем.</p>
+
+            {error && <p className="auth-error">{error}</p>}
 
             <div className="auth-field">
                 <label htmlFor="register-username">Имя пользователя</label>
