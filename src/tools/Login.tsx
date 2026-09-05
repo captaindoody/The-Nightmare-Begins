@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import "./Auth.css";
 
 type LoginProps = {
-    onLogin: (username: string) => void;
+    onLogin: (username: string, userId: number, role: string) => void;
 };
 
 function Login({ onLogin }: LoginProps) {
@@ -37,7 +37,7 @@ function Login({ onLogin }: LoginProps) {
 
         localStorage.setItem("token", data.token);
 
-        onLogin(data.username);
+        onLogin(data.username, data.user_id, data.role);
     }
 
     return (

@@ -54,8 +54,13 @@ pub struct CreateTaskRequest {
 }
 
 #[derive(Deserialize)]
-pub struct UpdateTaskRequest {
-    pub completed: bool,
+pub struct SubmitProofRequest {
+    pub proof_url: String,
+}
+
+#[derive(Deserialize)]
+pub struct ReviewTaskRequest {
+    pub approved: bool,
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -70,4 +75,7 @@ pub struct Task {
     pub completed: bool,
     pub due_date: Option<chrono::NaiveDate>,
     pub created_at: chrono::DateTime<chrono::Utc>,
+    pub proof_url: Option<String>,
+    pub review_status: String,
+    pub reviewed_by: Option<i32>,
 }

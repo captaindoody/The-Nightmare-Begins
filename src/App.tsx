@@ -18,8 +18,10 @@ function App() {
         Boolean(localStorage.getItem("token"))
     );
 
-    function handleLogin(username: string) {
+    function handleLogin(username: string, userId: number, role: string) {
         localStorage.setItem("username", username);
+        localStorage.setItem("user_id", String(userId));
+        localStorage.setItem("role", role);
         setIsLoggedIn(true);
         setPage("profile");
     }
@@ -27,6 +29,8 @@ function App() {
     function handleLogout() {
         localStorage.removeItem("token");
         localStorage.removeItem("username");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("role");
         setIsLoggedIn(false);
         setAuthPage("login");
     }

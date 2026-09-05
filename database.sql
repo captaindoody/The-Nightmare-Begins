@@ -19,7 +19,11 @@ CREATE TABLE tasks (
     description TEXT,
     completed BOOLEAN NOT NULL DEFAULT FALSE,
     due_date DATE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    proof_url TEXT,
+    review_status TEXT NOT NULL DEFAULT 'none'
+        CHECK (review_status IN ('none', 'pending', 'approved', 'rejected')),
+    reviewed_by INTEGER REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE INDEX tasks_assignee_id_idx ON tasks(assignee_id);
@@ -30,6 +34,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignee_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS due_date DATE;
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_url TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS review_status TEXT NOT NULL DEFAULT 'none';
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS reviewed_by INTEGER REFERENCES users(id) ON DELETE SET NULL;
 
 DO $$
 BEGIN

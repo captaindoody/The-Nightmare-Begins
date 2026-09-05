@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import "./Tasks.css";
 
 type Task = {
@@ -11,6 +11,8 @@ type Task = {
     description: string | null;
     completed: boolean;
     due_date: string | null;
+    proof_url: string | null;
+    review_status: "none" | "pending" | "approved" | "rejected";
 };
 
 type User = {
@@ -23,6 +25,8 @@ type TasksProps = {
     onLogout: () => void;
 };
 
+type TaskFilter = "all" | "mine" | "assigned" | "active" | "completed";
+
 function Tasks({ onLogout }: TasksProps) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -30,6 +34,35 @@ function Tasks({ onLogout }: TasksProps) {
     const [assigneeId, setAssigneeId] = useState("");
     const [tasks, setTasks] = useState<Task[]>([]);
     const [users, setUsers] = useState<User[]>([]);
+    const [filter, setFilter] = useState<TaskFilter>("all");
+
+    const currentUserId = Number(localStorage.getItem("user_id"));
+    const canCreateTasks = ["manager", "admin"].includes(
+        localStorage.getItem("role") || ""
+    );
+    const canManageAllTasks = localStorage.getItem("role") === "admin";
+    const canReviewTasks = ["manager", "admin"].includes(
+        localStorage.getItem("role") || ""
+    );
+    const filteredTasks = tasks.filter((task) => {
+        if (filter === "mine") {
+            return task.user_id === currentUserId;
+        }
+
+        if (filter === "assigned") {
+            return task.assignee_id === currentUserId;
+        }
+
+        if (filter === "active") {
+            return !task.completed;
+        }
+
+        if (filter === "completed") {
+            return task.completed;
+        }
+
+        return true;
+    });
 
     async function loadTasks() {
         const token = localStorage.getItem("token");
@@ -127,33 +160,65 @@ function Tasks({ onLogout }: TasksProps) {
     }
 
     async function toggleTask(task: Task) {
+        const input = document.getElementById(
+            `proof-input-${task.id}`
+        ) as HTMLInputElement | null;
+
+        input?.click();
+    }
+
+    async function submitProof(task: Task, event: ChangeEvent<HTMLInputElement>) {
+        const file = event.target.files?.[0];
+        const token = localStorage.getItem("token");
+
+        if (!file || !token || !file.type.startsWith("image/")) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+            const response = await fetch(
+                `http://127.0.0.1:3000/tasks/${task.id}/proof`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ proof_url: String(reader.result) })
+                }
+            );
+
+            if (!response.ok) {
+                console.log("Ошибка:", await response.text());
+                return;
+            }
+
+            loadTasks();
+        };
+        reader.readAsDataURL(file);
+        event.target.value = "";
+    }
+
+    async function reviewTask(task: Task, approved: boolean) {
         const token = localStorage.getItem("token");
 
         if (!token) {
             return;
         }
 
-        const response = await fetch(
-            `http://127.0.0.1:3000/tasks/${task.id}`,
-            {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    completed: !task.completed
-                })
-            }
-        );
+        const response = await fetch(`http://127.0.0.1:3000/tasks/${task.id}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ approved })
+        });
 
-        if (!response.ok) {
-            const text = await response.text();
-            console.log("Ошибка:", text);
-            return;
+        if (response.ok) {
+            loadTasks();
         }
-
-        loadTasks();
     }
 
     async function deleteTask(id: number) {
@@ -198,7 +263,7 @@ function Tasks({ onLogout }: TasksProps) {
                     </button>
                 </div>
 
-                <form
+                {canCreateTasks && <form
                     className="task-form"
                     onSubmit={handleSubmit}
                 >
@@ -249,18 +314,37 @@ function Tasks({ onLogout }: TasksProps) {
                     >
                         Создать задачу
                     </button>
-                </form>
+                </form>}
 
                 <h2 className="tasks-subtitle">
                     Список задач
                 </h2>
 
-                {tasks.length === 0 ? (
+                <div className="task-filter">
+                    <label htmlFor="task-filter-select">Показать:</label>
+                    <select
+                        id="task-filter-select"
+                        value={filter}
+                        onChange={(event) =>
+                            setFilter(event.target.value as TaskFilter)
+                        }
+                    >
+                        <option value="all">Все задачи</option>
+                        <option value="mine">Мои задачи</option>
+                        <option value="assigned">Назначенные мне</option>
+                        <option value="active">Активные</option>
+                        <option value="completed">Выполненные</option>
+                    </select>
+                </div>
+
+                {filteredTasks.length === 0 ? (
                     <p className="no-tasks">
-                        Задач пока нет
+                        {tasks.length === 0
+                            ? "Задач пока нет"
+                            : "По этому фильтру задач нет"}
                     </p>
                 ) : (
-                    tasks.map((task) => (
+                    filteredTasks.map((task) => (
                         <div
                             className={`task-card ${
                                 task.completed
@@ -278,9 +362,9 @@ function Tasks({ onLogout }: TasksProps) {
 
                             <p className="task-status">
                                 Статус:{" "}
-                                {task.completed
-                                    ? "Выполнено"
-                                    : "Активна"}
+                                {task.completed ? "Выполнено" :
+                                    task.review_status === "pending" ? "На проверке" :
+                                    task.review_status === "rejected" ? "Отклонено" : "Активна"}
                             </p>
 
                             <p className="task-status">
@@ -309,26 +393,60 @@ function Tasks({ onLogout }: TasksProps) {
                                 )}
                             </div>
 
-                            <div className="task-actions">
-                                <button
-                                    className="task-button complete-button"
-                                    onClick={() =>
-                                        toggleTask(task)
-                                    }
-                                >
-                                    {task.completed
-                                        ? "Вернуть"
-                                        : "Выполнить"}
-                                </button>
+                            {task.proof_url && (
+                                <img
+                                    className="task-proof"
+                                    src={task.proof_url}
+                                    alt="Доказательство выполнения"
+                                />
+                            )}
 
-                                <button
-                                    className="task-button delete-button"
-                                    onClick={() =>
-                                        deleteTask(task.id)
-                                    }
-                                >
-                                    Удалить
-                                </button>
+                            {canReviewTasks && task.review_status === "pending" && (
+                                <div className="task-actions">
+                                    <button
+                                        className="task-button complete-button"
+                                        onClick={() => reviewTask(task, true)}
+                                    >
+                                        Подтвердить
+                                    </button>
+                                    <button
+                                        className="task-button delete-button"
+                                        onClick={() => reviewTask(task, false)}
+                                    >
+                                        Отклонить
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="task-actions">
+                                {!task.completed &&
+                                    task.review_status !== "pending" &&
+                                    (task.user_id === currentUserId || task.assignee_id === currentUserId) && (
+                                        <>
+                                            <button
+                                                className="task-button complete-button"
+                                                onClick={() => toggleTask(task)}
+                                            >
+                                                Приложить фото и отправить
+                                            </button>
+                                            <input
+                                                id={`proof-input-${task.id}`}
+                                                className="proof-input"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(event) => submitProof(task, event)}
+                                            />
+                                        </>
+                                    )}
+
+                                {(canManageAllTasks || task.user_id === currentUserId) && (
+                                    <button
+                                        className="task-button delete-button"
+                                        onClick={() => deleteTask(task.id)}
+                                    >
+                                        Удалить
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))
